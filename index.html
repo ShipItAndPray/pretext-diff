@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@shipitandpray/pretext-diff — Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #8b949e;
+      margin-bottom: 24px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .controls select, .controls button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #30363d;
+    }
+
+    .controls button.active {
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: #fff;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .input-area .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .input-area .panel label {
+      font-size: 12px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #161b22;
+      color: #c9d1d9;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #1f6feb;
+    }
+
+    .stats {
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 8px;
+    }
+
+    /* Diff viewer styles (inline for demo, normally imported from package) */
+    .ptd-root {
+      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+      font-size: 13px;
+      line-height: 20px;
+      color: #d4d4d4;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .ptd-scroll-container {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .ptd-header {
+      display: flex;
+      border-bottom: 1px solid #333;
+      background: #252526;
+      padding: 4px 0;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .ptd-header-left, .ptd-header-right {
+      padding: 2px 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ptd-divider { background: #333; flex-shrink: 0; }
+
+    .ptd-line {
+      display: flex;
+      align-items: flex-start;
+      white-space: pre;
+      box-sizing: border-box;
+      padding: 0 8px;
+    }
+
+    .ptd-line-added { background: rgba(35, 134, 54, 0.15); }
+    .ptd-line-removed { background: rgba(218, 54, 51, 0.15); }
+    .ptd-line-unchanged { background: transparent; }
+    .ptd-line-spacer { background: #1a1a1a; }
+
+    .ptd-line-fold {
+      background: #252526;
+      justify-content: center;
+      color: #666;
+      font-style: italic;
+      cursor: pointer;
+    }
+
+    .ptd-gutter {
+      display: inline-block;
+      min-width: 3ch;
+      padding-right: 1ch;
+      text-align: right;
+      color: #555;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .ptd-content { flex: 1; overflow: hidden; }
+    .ptd-prefix { display: inline-block; width: 2ch; color: #888; user-select: none; }
+
+    .ptd-char-added { background: rgba(35, 134, 54, 0.4); border-radius: 2px; }
+    .ptd-char-removed { background: rgba(218, 54, 51, 0.4); border-radius: 2px; }
+    mark.ptd-char-added, mark.ptd-char-removed { color: inherit; padding: 0; }
+
+    .ptd-fold-label { padding: 0 12px; }
+    .ptd-side-by-side { display: flex; flex-direction: column; }
+
+    .sample-btns {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>@shipitandpray/pretext-diff</h1>
+  <p class="subtitle">Virtualized diff viewer for 100K+ line files. Paste two texts below or load a sample.</p>
+
+  <div class="controls">
+    <label>
+      Mode:
+      <select id="mode-select">
+        <option value="side-by-side">Side by Side</option>
+        <option value="unified">Unified</option>
+        <option value="inline">Inline</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" id="word-wrap" />
+      Word Wrap
+    </label>
+    <div class="sample-btns">
+      <button onclick="loadSample('small')">Small diff</button>
+      <button onclick="loadSample('medium')">Medium diff (1K lines)</button>
+      <button onclick="loadSample('large')">Large diff (10K lines)</button>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="panel">
+      <label>Old Text</label>
+      <textarea id="old-text" placeholder="Paste old text here..."></textarea>
+    </div>
+    <div class="panel">
+      <label>New Text</label>
+      <textarea id="new-text" placeholder="Paste new text here..."></textarea>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="diff-root"></div>
+
+  <script type="module">
+    // --- Diff engine (pure JS, same logic as src/) ---
+    // For the demo we inline a simplified version. In production, import from the package.
+
+    function computeCharDiffsSimple(oldStr, newStr) {
+      // Simple LCS-based char diff for demo
+      const removed = [];
+      const added = [];
+      let oi = 0, ni = 0;
+      while (oi < oldStr.length && ni < newStr.length) {
+        if (oldStr[oi] === newStr[ni]) { oi++; ni++; }
+        else {
+          // Find next match
+          let oEnd = oi, nEnd = ni;
+          while (oEnd < oldStr.length && oldStr[oEnd] !== newStr[ni]) oEnd++;
+          while (nEnd < newStr.length && newStr[nEnd] !== oldStr[oi]) nEnd++;
+          if (oEnd - oi <= nEnd - ni) {
+            removed.push({ start: oi, end: oEnd, type: 'removed' });
+            oi = oEnd;
+          } else {
+            added.push({ start: ni, end: nEnd, type: 'added' });
+            ni = nEnd;
+          }
+        }
+      }
+      if (oi < oldStr.length) removed.push({ start: oi, end: oldStr.length, type: 'removed' });
+      if (ni < newStr.length) added.push({ start: ni, end: newStr.length, type: 'added' });
+      return { removed, added };
+    }
+
+    function computeDiffLines(oldText, newText) {
+      const oldLines = oldText.split('\n');
+      const newLines = newText.split('\n');
+      // Simple diff: find common prefix/suffix, diff the middle
+      const result = [];
+      let oi = 0, ni = 0;
+
+      // Use a basic line-by-line comparison via LCS
+      const m = oldLines.length, n = newLines.length;
+
+      // For demo simplicity, use a greedy approach
+      // Build edit script using patience-like approach
+      const lcs = [];
+      const oldMap = new Map();
+      oldLines.forEach((l, i) => {
+        if (!oldMap.has(l)) oldMap.set(l, []);
+        oldMap.get(l).push(i);
+      });
+
+      // Greedy LCS matching
+      let lastOld = -1;
+      const matched = new Set();
+      const matchedNew = new Set();
+
+      for (let ni2 = 0; ni2 < n; ni2++) {
+        const positions = oldMap.get(newLines[ni2]);
+        if (positions) {
+          for (const pos of positions) {
+            if (pos > lastOld && !matched.has(pos)) {
+              lcs.push([pos, ni2]);
+              matched.add(pos);
+              matchedNew.add(ni2);
+              lastOld = pos;
+              break;
+            }
+          }
+        }
+      }
+
+      // Build result from LCS
+      let prevOi = 0, prevNi = 0;
+      for (const [lcOi, lcNi] of lcs) {
+        // Lines before this match
+        while (prevOi < lcOi) {
+          result.push({ type: 'removed', oldLineNumber: prevOi + 1, newLineNumber: null, content: oldLines[prevOi] });
+          prevOi++;
+        }
+        while (prevNi < lcNi) {
+          result.push({ type: 'added', oldLineNumber: null, newLineNumber: prevNi + 1, content: newLines[prevNi] });
+          prevNi++;
+        }
+        result.push({ type: 'unchanged', oldLineNumber: prevOi + 1, newLineNumber: prevNi + 1, content: oldLines[prevOi] });
+        prevOi++; prevNi++;
+      }
+      while (prevOi < m) {
+        result.push({ type: 'removed', oldLineNumber: prevOi + 1, newLineNumber: null, content: oldLines[prevOi] });
+        prevOi++;
+      }
+      while (prevNi < n) {
+        result.push({ type: 'added', oldLineNumber: null, newLineNumber: prevNi + 1, content: newLines[prevNi] });
+        prevNi++;
+      }
+
+      // Add char diffs to paired removed+added
+      for (let i = 0; i < result.length - 1; i++) {
+        if (result[i].type === 'removed' && result[i + 1].type === 'added') {
+          const cd = computeCharDiffsSimple(result[i].content, result[i + 1].content);
+          result[i].charDiffs = cd.removed;
+          result[i + 1].charDiffs = cd.added;
+        }
+      }
+
+      return result;
+    }
+
+    function foldUnchanged(lines, threshold, ctx = 3) {
+      if (threshold <= 0) return lines;
+      const result = [];
+      let start = -1;
+      for (let i = 0; i <= lines.length; i++) {
+        const isU = i < lines.length && lines[i].type === 'unchanged';
+        if (isU) { if (start === -1) start = i; }
+        else {
+          if (start !== -1) {
+            const run = i - start;
+            if (run > threshold) {
+              const top = Math.min(ctx, run);
+              for (let j = start; j < start + top; j++) result.push(lines[j]);
+              const bot = Math.min(ctx, run - top);
+              const folded = run - top - bot;
+              if (folded > 0) result.push({ type: 'fold-placeholder', oldLineNumber: null, newLineNumber: null, content: `... ${folded} unchanged lines ...` });
+              for (let j = i - bot; j < i; j++) result.push(lines[j]);
+            } else {
+              for (let j = start; j < i; j++) result.push(lines[j]);
+            }
+            start = -1;
+          }
+          if (i < lines.length) result.push(lines[i]);
+        }
+      }
+      return result;
+    }
+
+    function buildPairs(lines) {
+      const pairs = [];
+      let i = 0;
+      while (i < lines.length) {
+        const l = lines[i];
+        if (l.type === 'unchanged' || l.type === 'fold-placeholder') { pairs.push({ left: l, right: l }); i++; }
+        else if (l.type === 'removed') {
+          const rem = []; while (i < lines.length && lines[i].type === 'removed') { rem.push(lines[i]); i++; }
+          const add = []; while (i < lines.length && lines[i].type === 'added') { add.push(lines[i]); i++; }
+          const mx = Math.max(rem.length, add.length);
+          for (let j = 0; j < mx; j++) pairs.push({ left: rem[j] || null, right: add[j] || null });
+        } else { pairs.push({ left: null, right: l }); i++; }
+      }
+      return pairs;
+    }
+
+    // --- Rendering ---
+    const LINE_HEIGHT = 20;
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderCharHighlight(content, charDiffs, lineType) {
+      if (!charDiffs || !charDiffs.length) return escapeHtml(content);
+      let html = '', cursor = 0;
+      const cls = lineType === 'added' ? 'ptd-char-added' : 'ptd-char-removed';
+      for (const cd of charDiffs) {
+        if (cursor < cd.start) html += escapeHtml(content.slice(cursor, cd.start));
+        html += `<mark class="${cls}">${escapeHtml(content.slice(cd.start, cd.end))}</mark>`;
+        cursor = cd.end;
+      }
+      if (cursor < content.length) html += escapeHtml(content.slice(cursor));
+      return html;
+    }
+
+    function renderDiff() {
+      const oldText = document.getElementById('old-text').value;
+      const newText = document.getElementById('new-text').value;
+      const mode = document.getElementById('mode-select').value;
+
+      const t0 = performance.now();
+      const rawLines = computeDiffLines(oldText, newText);
+      const lines = foldUnchanged(rawLines, 8);
+      const diffTime = (performance.now() - t0).toFixed(1);
+
+      const root = document.getElementById('diff-root');
+      const viewportHeight = 500;
+      const viewportWidth = root.clientWidth || 900;
+
+      const stats = document.getElementById('stats');
+      const oldLineCount = oldText.split('\n').length;
+      const newLineCount = newText.split('\n').length;
+      const added = rawLines.filter(l => l.type === 'added').length;
+      const removed = rawLines.filter(l => l.type === 'removed').length;
+      stats.textContent = `Old: ${oldLineCount} lines | New: ${newLineCount} lines | +${added} -${removed} | Diff computed in ${diffTime}ms`;
+
+      if (mode === 'side-by-side') {
+        renderSideBySide(root, lines, viewportHeight, viewportWidth);
+      } else {
+        renderUnified(root, lines, viewportHeight, viewportWidth);
+      }
+    }
+
+    function renderSideBySide(root, lines, height, width) {
+      const pairs = buildPairs(lines);
+      const totalHeight = pairs.length * LINE_HEIGHT;
+      const panelW = Math.floor((width - 2) / 2);
+
+      let html = `<div class="ptd-root"><div class="ptd-side-by-side" style="height:${height}px;width:${width}px">`;
+      html += `<div class="ptd-scroll-container" style="height:${height}px;overflow:auto" id="sbs-scroll">`;
+      html += `<div style="position:relative;height:${totalHeight}px;display:flex">`;
+
+      // Left panel
+      html += `<div style="position:relative;width:${panelW}px;height:${totalHeight}px">`;
+      for (let i = 0; i < pairs.length; i++) {
+        const line = pairs[i].left;
+        html += renderLineHtml(line, i, 'left', panelW);
+      }
+      html += `</div>`;
+
+      // Divider
+      html += `<div class="ptd-divider" style="width:2px;height:${totalHeight}px"></div>`;
+
+      // Right panel
+      html += `<div style="position:relative;width:${panelW}px;height:${totalHeight}px">`;
+      for (let i = 0; i < pairs.length; i++) {
+        const line = pairs[i].right;
+        html += renderLineHtml(line, i, 'right', panelW);
+      }
+      html += `</div>`;
+
+      html += `</div></div></div></div>`;
+      root.innerHTML = html;
+    }
+
+    function renderUnified(root, lines, height, width) {
+      const totalHeight = lines.length * LINE_HEIGHT;
+
+      let html = `<div class="ptd-root"><div class="ptd-unified" style="height:${height}px;width:${width}px">`;
+      html += `<div class="ptd-scroll-container" style="height:${height}px;overflow:auto">`;
+      html += `<div style="position:relative;height:${totalHeight}px">`;
+
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        const cls = l.type === 'added' ? 'ptd-line-added' : l.type === 'removed' ? 'ptd-line-removed' : l.type === 'fold-placeholder' ? 'ptd-line-fold' : 'ptd-line-unchanged';
+        const top = i * LINE_HEIGHT;
+
+        html += `<div class="ptd-line ${cls}" style="position:absolute;top:${top}px;height:${LINE_HEIGHT}px;width:${width}px">`;
+        if (l.type === 'fold-placeholder') {
+          html += `<span class="ptd-fold-label">${escapeHtml(l.content)}</span>`;
+        } else {
+          const oldNum = l.oldLineNumber != null ? String(l.oldLineNumber).padStart(4) : '    ';
+          const newNum = l.newLineNumber != null ? String(l.newLineNumber).padStart(4) : '    ';
+          const prefix = l.type === 'added' ? '+' : l.type === 'removed' ? '-' : ' ';
+          html += `<span class="ptd-gutter">${oldNum}</span>`;
+          html += `<span class="ptd-gutter">${newNum}</span>`;
+          html += `<span class="ptd-content"><span class="ptd-prefix">${prefix}</span>${renderCharHighlight(l.content, l.charDiffs, l.type)}</span>`;
+        }
+        html += `</div>`;
+      }
+
+      html += `</div></div></div></div>`;
+      root.innerHTML = html;
+    }
+
+    function renderLineHtml(line, i, side, width) {
+      const top = i * LINE_HEIGHT;
+      if (!line) {
+        return `<div class="ptd-line ptd-line-spacer" style="position:absolute;top:${top}px;height:${LINE_HEIGHT}px;width:${width}px"></div>`;
+      }
+      const cls = line.type === 'removed' ? 'ptd-line-removed' : line.type === 'added' ? 'ptd-line-added' : line.type === 'fold-placeholder' ? 'ptd-line-fold' : 'ptd-line-unchanged';
+      let html = `<div class="ptd-line ${cls}" style="position:absolute;top:${top}px;height:${LINE_HEIGHT}px;width:${width}px">`;
+      if (line.type === 'fold-placeholder') {
+        html += `<span class="ptd-fold-label">${escapeHtml(line.content)}</span>`;
+      } else {
+        const num = (side === 'left' ? line.oldLineNumber : line.newLineNumber);
+        const numStr = num != null ? String(num).padStart(4) : '    ';
+        html += `<span class="ptd-gutter">${numStr}</span>`;
+        html += `<span class="ptd-content">${renderCharHighlight(line.content, line.charDiffs, line.type)}</span>`;
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    // --- Sample data ---
+    function generateLines(n, prefix) {
+      const lines = [];
+      for (let i = 1; i <= n; i++) {
+        lines.push(`${prefix} line ${i}: const value_${i} = compute(${i * 7});`);
+      }
+      return lines.join('\n');
+    }
+
+    window.loadSample = function(size) {
+      const oldEl = document.getElementById('old-text');
+      const newEl = document.getElementById('new-text');
+
+      if (size === 'small') {
+        oldEl.value = `function greet(name) {
+  console.log("Hello, " + name);
+  return true;
+}
+
+const x = 42;
+const y = x * 2;
+console.log(y);`;
+        newEl.value = `function greet(name, greeting = "Hello") {
+  console.log(greeting + ", " + name + "!");
+  return true;
+}
+
+const x = 42;
+const y = x * 3;
+const z = y + 1;
+console.log(y, z);`;
+      } else if (size === 'medium') {
+        const old1k = generateLines(1000, 'old');
+        const lines = old1k.split('\n');
+        // Modify ~10% of lines
+        for (let i = 0; i < lines.length; i += 10) {
+          lines[i] = lines[i].replace('old', 'new').replace('compute', 'calculate');
+        }
+        // Add some lines
+        lines.splice(500, 0, '// NEW: inserted block start', '  const extra = true;', '// NEW: inserted block end');
+        // Remove some lines
+        lines.splice(200, 3);
+        oldEl.value = old1k;
+        newEl.value = lines.join('\n');
+      } else {
+        const old10k = generateLines(10000, 'old');
+        const lines = old10k.split('\n');
+        for (let i = 0; i < lines.length; i += 50) {
+          lines[i] = lines[i].replace('old', 'new').replace('compute', 'transform');
+        }
+        lines.splice(5000, 0, ...Array.from({length: 20}, (_, i) => `// INSERTED LINE ${i}`));
+        lines.splice(2000, 10);
+        oldEl.value = old10k;
+        newEl.value = lines.join('\n');
+      }
+
+      renderDiff();
+    };
+
+    // Event listeners
+    document.getElementById('mode-select').addEventListener('change', renderDiff);
+    document.getElementById('word-wrap').addEventListener('change', renderDiff);
+
+    let debounceTimer;
+    function debouncedRender() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderDiff, 300);
+    }
+    document.getElementById('old-text').addEventListener('input', debouncedRender);
+    document.getElementById('new-text').addEventListener('input', debouncedRender);
+
+    // Load small sample on start
+    window.loadSample('small');
+  </script>
+</body>
+</html>

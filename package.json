@@ -1,0 +1,62 @@
+{
+  "name": "@shipitandpray/pretext-diff",
+  "version": "1.0.0",
+  "description": "Virtualized side-by-side and unified diff viewer powered by @chenglou/pretext. Handles 100K+ line diffs at 120fps.",
+  "author": "ShipItAndPray",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./css": "./dist/styles.css"
+  },
+  "sideEffects": ["*.css"],
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@chenglou/pretext": ">=0.0.3",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "diff": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@chenglou/pretext": "^0.0.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@types/diff": "^7.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "diff": "^7.0.0",
+    "jsdom": "^25.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "keywords": [
+    "diff",
+    "diff-viewer",
+    "side-by-side",
+    "unified-diff",
+    "virtualized",
+    "pretext",
+    "react",
+    "code-review",
+    "large-files",
+    "120fps"
+  ]
+}

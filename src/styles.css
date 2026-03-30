@@ -1,0 +1,148 @@
+/* @shipitandpray/pretext-diff */
+
+.ptd-root {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 13px;
+  line-height: 20px;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Scroll container */
+.ptd-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ptd-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ptd-scroll-container::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.ptd-scroll-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+/* Header (file titles) */
+.ptd-header {
+  display: flex;
+  border-bottom: 1px solid #333;
+  background: #252526;
+  padding: 4px 0;
+  font-size: 12px;
+  color: #999;
+}
+
+.ptd-header-left,
+.ptd-header-right {
+  padding: 2px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Divider between panels */
+.ptd-divider {
+  background: #333;
+  flex-shrink: 0;
+}
+
+/* Lines */
+.ptd-line {
+  display: flex;
+  align-items: flex-start;
+  white-space: pre;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+
+.ptd-line-added {
+  background: rgba(35, 134, 54, 0.15);
+}
+
+.ptd-line-removed {
+  background: rgba(218, 54, 51, 0.15);
+}
+
+.ptd-line-unchanged {
+  background: transparent;
+}
+
+.ptd-line-spacer {
+  background: #1a1a1a;
+}
+
+.ptd-line-fold {
+  background: #252526;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.ptd-line-fold:hover {
+  background: #2a2a2a;
+  color: #999;
+}
+
+/* Gutter */
+.ptd-gutter {
+  display: inline-block;
+  min-width: 3ch;
+  padding-right: 1ch;
+  text-align: right;
+  color: #555;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Content area */
+.ptd-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ptd-prefix {
+  display: inline-block;
+  width: 2ch;
+  color: #888;
+  user-select: none;
+}
+
+/* Character-level highlights */
+.ptd-char-added {
+  background: rgba(35, 134, 54, 0.4);
+  border-radius: 2px;
+  color: inherit;
+}
+
+.ptd-char-removed {
+  background: rgba(218, 54, 51, 0.4);
+  border-radius: 2px;
+  color: inherit;
+}
+
+mark.ptd-char-added,
+mark.ptd-char-removed {
+  /* Reset mark defaults */
+  color: inherit;
+  padding: 0;
+}
+
+/* Fold label */
+.ptd-fold-label {
+  padding: 0 12px;
+}
+
+/* Side-by-side layout */
+.ptd-side-by-side {
+  display: flex;
+  flex-direction: column;
+}
