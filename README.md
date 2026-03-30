@@ -1,5 +1,9 @@
 # @shipitandpray/pretext-diff
 
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://shipitandpray.github.io/pretext-diff/) [![GitHub](https://img.shields.io/github/stars/ShipItAndPray/pretext-diff?style=social)](https://github.com/ShipItAndPray/pretext-diff)
+
+> **[View Live Demo](https://shipitandpray.github.io/pretext-diff/)**
+
 Virtualized side-by-side and unified diff viewer for React. Handles **100K+ line diffs at 120fps** using [@chenglou/pretext](https://github.com/chenglou/pretext) for predictive line measurement — no DOM measurement, no layout thrashing.
 
 ## Screenshot
